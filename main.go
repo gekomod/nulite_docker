@@ -41,7 +41,7 @@ func (a *App) configured(ctx context.Context) bool { return a.getESPURL(ctx)!=""
 func (a *App) routes() {
 	a.mux.HandleFunc("/api/v1/health",func(w http.ResponseWriter,r *http.Request){writeJSON(w,200,map[string]any{"ok":true,"service":"nulite-docker","time":time.Now().UTC().Format(time.RFC3339)})})
 	a.mux.HandleFunc("/api/v1/config",func(w http.ResponseWriter,r *http.Request){
-		if r.Method==http.MethodGet { var configured bool; url:=a.getESPURL(r.Context()); configured=url!=""; if url!="" { u:=strings.TrimRight(url,"/"); if len(u)>48 {u=u[:48]+"…"}; writeJSON(w,200,map[string]any{"configured":true,"esp_url":u}); return }; writeJSON(w,200,map[string]any{"configured":false,"esp_url":""}); return }
+		if r.Method==http.MethodGet { url:=a.getESPURL(r.Context()); if url!="" { u:=strings.TrimRight(url,"/"); if len(u)>48 {u=u[:48]+"…"}; writeJSON(w,200,map[string]any{"configured":true,"esp_url":u}); return }; writeJSON(w,200,map[string]any{"configured":false,"esp_url":""}); return }
 		if r.Method!=http.MethodPost {http.Error(w,"method not allowed",405);return}
 		r.Body=http.MaxBytesReader(w,r.Body,4096); var input struct{ ESPURL string `json:"esp_url"` }
 		if e:=json.NewDecoder(r.Body).Decode(&input); e!=nil {writeJSON(w,400,map[string]any{"error":"Nieprawidłowy JSON"});return}
