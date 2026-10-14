@@ -2,8 +2,8 @@
 set -eu
 VERSION="${1:-dev}"
 mkdir -p dist
-docker build --pull -t "nulite-docker:${VERSION}" .
-docker save "nulite-docker:${VERSION}" | gzip -9 > "dist/nulite-docker-${VERSION}.tar.gz"
+docker build --pull -t "ghcr.io/gekomod/nulite-docker:${VERSION}" .
+docker save "ghcr.io/gekomod/nulite-docker:${VERSION}" | gzip -9 > "dist/nulite-docker-${VERSION}.tar.gz"
 cp compose.yml dist/compose.yml
 cp .env.example dist/.env.example
 cat > dist/README-DEPLOY.txt <<EOF
