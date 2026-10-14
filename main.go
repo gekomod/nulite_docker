@@ -72,10 +72,10 @@ func (a *App) routes() {
 	})
 	a.mux.HandleFunc("/api/v1/esp/",func(w http.ResponseWriter,r *http.Request){
 		path:=strings.TrimPrefix(r.URL.Path,"/api/v1/esp")
-		switch path { case "/api/data","/api/status","/api/diag","/api/v1/config/device","/api/v1/log","/api/v1/diagnostics","/api/v1/scan","/api/v1/restart","/update": default: http.Error(w,"route not allowed",403); return }
+		switch path { case "/api/data","/api/status","/api/diag","/api/v1/config/device","/api/v1/log","/api/v1/diagnostics","/api/v1/diagnostics/probe","/api/v1/scan","/api/v1/restart","/update": default: http.Error(w,"route not allowed",403); return }
 		if path=="/update" {
 			if r.Method!=http.MethodPost { http.Error(w,"method not allowed",405); return }
-		} else if path=="/api/v1/scan" {
+		} else if path=="/api/v1/scan" || path=="/api/v1/diagnostics/probe" {
 			if r.Method!=http.MethodPost { http.Error(w,"method not allowed",405); return }
 		} else if path=="/api/v1/config/device" {
 			if r.Method!=http.MethodGet && r.Method!=http.MethodPost { http.Error(w,"method not allowed",405); return }
