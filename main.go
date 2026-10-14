@@ -71,9 +71,22 @@ func (a *App) routes() {
 		writeJSON(w,200,map[string]any{"items":out})
 	})
 	a.mux.HandleFunc("/api/v1/esp/",func(w http.ResponseWriter,r *http.Request){
-		path:=strings.TrimPrefix(r.URL.Path,"/api/v1/esp");switch path{case "/api/data","/api/status","/api/diag":default:http.Error(w,"route not allowed",403);return}
-		if r.Method!=http.MethodGet{http.Error(w,"method not allowed",405);return};url:=a.getESPURL(r.Context());if url==""{writeJSON(w,428,map[string]any{"error":"Najpierw skonfiguruj adres ESP"});return}
-		data,status,e:=a.fetchURL(r.Context(),url,path);if e!=nil{writeJSON(w,502,map[string]any{"error":e.Error()});return};w.Header().Set("Content-Type","application/json; charset=utf-8");w.WriteHeader(status);_,_=w.Write(data)
+		path:=strings.TrimPrefix(r.URL.Path,"/api/v1/esp")
+		switch path { case "/api/data","/api/status","/api/diag","/api/v1/config/device","/api/v1/log","/api/v1/diagnostics","/api/v1/scan","/update": default: http.Error(w,"route not allowed",403); return }
+		if path=="/update" {
+			if r.Method!=http.MethodPost { http.Error(w,"method not allowed",405); return }
+		} else if path=="/api/v1/scan" {
+			if r.Method!=http.MethodPost { http.Error(w,"method not allowed",405); return }
+		} else if path=="/api/v1/config/device" {
+			if r.Method!=http.MethodGet && r.Method!=http.MethodPost { http.Error(w,"method not allowed",405); return }
+		} else if r.Method!=http.MethodGet { http.Error(w,"method not allowed",405); return }
+		url:=a.getESPURL(r.Context()); if url=="" { writeJSON(w,428,map[string]any{"error":"Najpierw skonfiguruj adres ESP"}); return }
+		ctx,cancel:=context.WithTimeout(r.Context(),2*time.Minute); defer cancel()
+		req,e:=http.NewRequestWithContext(ctx,r.Method,strings.TrimRight(url,"/")+path,r.Body); if e!=nil { http.Error(w,"invalid request",400); return }
+		for _,h:=range []string{"Content-Type","Content-Length","Authorization"} { if v:=r.Header.Get(h);v!="" { req.Header.Set(h,v) } }
+		resp,e:=a.client.Do(req); if e!=nil { writeJSON(w,502,map[string]any{"error":"Błąd połączenia z ESP","detail":e.Error()}); return }; defer resp.Body.Close()
+		for _,h:=range []string{"Content-Type","Cache-Control"} { if v:=resp.Header.Get(h);v!="" { w.Header().Set(h,v) } }
+		w.WriteHeader(resp.StatusCode); _,_=io.Copy(w,io.LimitReader(resp.Body,8<<20))
 	})
 	a.mux.HandleFunc("/",func(w http.ResponseWriter,r *http.Request){
 		if r.URL.Path!="/" {http.NotFound(w,r);return}
