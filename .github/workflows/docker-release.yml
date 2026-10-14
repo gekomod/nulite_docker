@@ -1,0 +1,50 @@
+name: Docker package
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version
+        required: true
+        default: manual
+permissions:
+  contents: write
+  packages: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build image
+        run: docker build --pull -t nulite-docker:${{ steps.version.outputs.value }} .
+      - name: Export portable package
+        run: |
+          mkdir -p dist
+          docker save nulite-docker:${{ steps.version.outputs.value }} | gzip -9 > dist/nulite-docker-${{ steps.version.outputs.value }}.tar.gz
+          cp compose.yml dist/
+          cp .env.example dist/
+          cp README.md dist/README-DEPLOY.md
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/nulite-docker-${{ steps.version.outputs.value }}.tar.gz
+            dist/compose.yml
+            dist/.env.example
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nulite-docker-${{ steps.version.outputs.value }}
+          path: dist/*
