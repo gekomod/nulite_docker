@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -119,7 +120,7 @@ func (a *App) fetchESP(ctx context.Context, path string) ([]byte,int,error) {
 	resp,err:=a.client.Do(req); if err!=nil{return nil,0,err}; defer resp.Body.Close()
 	if resp.StatusCode<200||resp.StatusCode>=300{return nil,resp.StatusCode,errors.New(resp.Status)}
 	var data json.RawMessage
-	if err=json.NewDecoder(http.MaxBytesReader(nil,resp.Body,2<<20)).Decode(&data); err!=nil{return nil,0,err}
+	if err=json.NewDecoder(io.LimitReader(resp.Body,2<<20)).Decode(&data); err!=nil{return nil,0,err}
 	return data,resp.StatusCode,nil
 }
 
