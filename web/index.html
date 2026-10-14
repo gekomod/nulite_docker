@@ -79,7 +79,7 @@ function showPage(key,updateHash=true){
 function historyReplace(key){if(location.hash!=='#'+key)location.hash=key;}
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showPage(a.dataset.page)}));
 window.addEventListener('hashchange',()=>showPage(location.hash.slice(1),false));
-$('enableModbus').addEventListener('click',async()=>{
+$('enableModbus')?.addEventListener('click',async()=>{
  const msg=$('settingsMessage');msg.textContent='Włączam wyłącznie odczyt Modbus…';
  try{
   await settingsLoad();
