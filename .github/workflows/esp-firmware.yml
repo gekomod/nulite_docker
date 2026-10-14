@@ -1,0 +1,26 @@
+name: ESP8266 firmware build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: gekomod/nulite-esp8266
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Build firmware
+        run: pio run -e nodemcuv2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nulite-esp8266-firmware
+          path: .pio/build/nodemcuv2/firmware.bin
