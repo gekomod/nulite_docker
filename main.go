@@ -84,7 +84,7 @@ func (a *App) routes() {
 		ctx,cancel:=context.WithTimeout(r.Context(),2*time.Minute); defer cancel()
 		req,e:=http.NewRequestWithContext(ctx,r.Method,strings.TrimRight(url,"/")+path,r.Body); if e!=nil { http.Error(w,"invalid request",400); return }
 		for _,h:=range []string{"Content-Type","Content-Length","Authorization"} { if v:=r.Header.Get(h);v!="" { req.Header.Set(h,v) } }
-		resp,e:=a.client.Do(req); if e!=nil { writeJSON(w,502,map[string]any{"error":"Błąd połączenia z ESP","detail":e.Error()}); return }; defer resp.Body.Close()
+		proxyClient:=a.client; if path=="/update" { proxyClient=&http.Client{Timeout:2*time.Minute} }; resp,e:=proxyClient.Do(req); if e!=nil { writeJSON(w,502,map[string]any{"error":"Błąd połączenia z ESP","detail":e.Error()}); return }; defer resp.Body.Close()
 		for _,h:=range []string{"Content-Type","Cache-Control"} { if v:=resp.Header.Get(h);v!="" { w.Header().Set(h,v) } }
 		w.WriteHeader(resp.StatusCode); _,_=io.Copy(w,io.LimitReader(resp.Body,8<<20))
 	})
