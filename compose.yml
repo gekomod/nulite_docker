@@ -1,0 +1,27 @@
+services:
+  nulite:
+    container_name: nulite-docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/gekomod/nulite-docker:latest
+    restart: unless-stopped
+    ports:
+      - "${NULITE_PORT:-8088}:8080"
+    environment:
+      LISTEN_ADDR: ":8080"
+      ESP_URL: "${ESP_URL:-http://192.168.31.131}"
+      DB_PATH: /data/nulite.db
+      POLL_INTERVAL: "${POLL_INTERVAL:-5s}"
+      TZ: Europe/Warsaw
+    volumes:
+      - nulite_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/v1/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  nulite_data:
