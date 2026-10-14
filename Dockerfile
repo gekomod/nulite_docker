@@ -2,9 +2,9 @@
 FROM golang:1.24-alpine AS build
 WORKDIR /src
 RUN apk add --no-cache ca-certificates build-base
-COPY go.mod ./
-RUN go mod download
 COPY . .
+# Generate/complete go.sum from go.mod and source imports before compiling.
+RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/nulite-docker .
 
 FROM alpine:3.22
