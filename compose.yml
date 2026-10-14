@@ -10,7 +10,7 @@ services:
       - "${NULITE_PORT:-8088}:8080"
     environment:
       LISTEN_ADDR: ":8080"
-      ESP_URL: "${ESP_URL:-http://192.168.31.131}"
+      ESP_URL: "${ESP_URL:-}"
       DB_PATH: /data/nulite.db
       POLL_INTERVAL: "${POLL_INTERVAL:-5s}"
       TZ: Europe/Warsaw
